@@ -4,7 +4,7 @@ function getToken(): string {
   return wx.getStorageSync('token') || ''
 }
 
-function request<T>(url: string, options: WechatMiniprogram.RequestOption = {}): Promise<T> {
+function request<T>(url: string, options: Omit<WechatMiniprogram.RequestOption, 'url'> = {}): Promise<T> {
   return new Promise((resolve, reject) => {
     const token = getToken()
     const header: Record<string, string> = { 'Content-Type': 'application/json' }

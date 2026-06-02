@@ -68,7 +68,7 @@
         </view>
         <view wx:if="{{item.prompt}}" class="prompt-row">
           <text class="prompt-text">{{item.prompt}}</text>
-          <image class="copy-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2' ry='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E" data-prompt="{{item.prompt}}" bindtap="copyPrompt" />
+          <text class="copy-icon" data-prompt="{{item.prompt}}" bindtap="copyPrompt">复制</text>
         </view>
       </view>
     </view>
