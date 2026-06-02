@@ -1,0 +1,25 @@
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page">
+    <view wx:if="{{loading}}" class="empty">加载中...</view>
+    <view wx:elif="{{albums.length === 0}}" class="empty">暂无画册</view>
+    <view wx:else class="card-grid">
+      <view wx:for="{{albums}}" wx:key="id" wx:for-item="item" class="card album-card" data-url="{{item.url}}" bindtap="openImage">
+        <image src="{{item.url}}" mode="aspectFill" class="album-img" />
+        <view class="album-info">
+          <text class="album-model">{{item.model}}</text>
+          <text class="album-date">{{item.date}}</text>
+        </view>
+        <view wx:if="{{item.prompt}}" class="prompt-row">
+          <text class="prompt-text">{{item.prompt}}</text>
+          <text class="copy-icon" data-prompt="{{item.prompt}}" bindtap="copyPrompt">复制</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{totalPages > 1}}" class="pagination">
+      <button class="page-btn" disabled="{{page === 0}}" bindtap="prevPage">上一页</button>
+      <text class="page-info">{{page + 1}} / {{totalPages}}</text>
+      <button class="page-btn" disabled="{{page >= totalPages - 1}}" bindtap="nextPage">下一页</button>
+    </view>
+  </view>
+</scroll-view>

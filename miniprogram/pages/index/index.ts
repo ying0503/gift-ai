@@ -1,9 +1,8 @@
-import { generate, getStatus, getAlbums } from '../../utils/api'
+import { generate, getStatus } from '../../utils/api'
 
 const RATIOS = ['auto', '1:1', '16:9', '9:16', '4:3', '3:4']
 const RESOLUTIONS = ['1K', '2K', '4K']
 const MODELS = ['maiziai-chatgpt-image-2', 'gpt-image-2-official', 'wan2.7-image', 'wan2.7-image-pro']
-const PAGE_SIZE = 20
 
 Page({
   data: {
@@ -17,10 +16,6 @@ Page({
     refImages: [] as string[],
     generating: false,
     cards: [] as any[],
-    albums: [] as any[],
-    page: 0,
-    allCards: [] as any[],
-    totalPages: 0,
     canGenerate: false,
   },
 
@@ -30,19 +25,12 @@ Page({
       wx.redirectTo({ url: '/pages/login/login' })
       return
     }
-    this.loadAlbums()
     this.updateDerived()
   },
 
   updateDerived() {
-    const { cards, albums, page, promptText, modelIndex } = this.data
-    const inProgress = [...cards].filter(c => !c.finished).reverse()
-    const finished = [...cards].filter(c => c.finished).reverse()
-    const start = page * PAGE_SIZE
-    const pagedAlbums = albums.slice(start, start + PAGE_SIZE)
+    const { promptText, modelIndex } = this.data
     this.setData({
-      allCards: [...inProgress, ...finished, ...pagedAlbums] as any[],
-      totalPages: Math.ceil(albums.length / PAGE_SIZE),
       canGenerate: !!(MODELS[modelIndex] && promptText.length > 10),
     })
   },
@@ -61,10 +49,6 @@ Page({
     this.setData({ modelIndex: e.detail.value }, () => this.updateDerived())
   },
 
-  get size() { return RATIOS[this.data.sizeIndex] },
-  get image_size() { return RESOLUTIONS[this.data.resIndex] },
-  get model() { return MODELS[this.data.modelIndex] },
-
   importExcel() {
     wx.showToast({ title: '小程序暂不支持 Excel 导入', icon: 'none' })
   },
@@ -76,9 +60,9 @@ Page({
       sourceType: ['album', 'camera'],
       success: (res) => {
         const files = res.tempFilePaths
-    Promise.all(files.map(f => this.fileToBase64(f))).then(urls => {
-      this.setData({ refImages: [...this.data.refImages, ...urls.filter(Boolean) as string[]] }, () => this.updateDerived())
-    })
+        Promise.all(files.map(f => this.fileToBase64(f))).then(urls => {
+          this.setData({ refImages: [...this.data.refImages, ...urls.filter(Boolean) as string[]] }, () => this.updateDerived())
+        })
       },
     })
   },
@@ -104,31 +88,37 @@ Page({
 
   async handleGenerate() {
     if (!this.data.canGenerate || this.data.generating) return
-    this.setData({ generating: true })
     const token = wx.getStorageSync('token')
     if (!token) {
       wx.redirectTo({ url: '/pages/login/login' })
       return
     }
 
+    const { sizeIndex, resIndex, modelIndex, promptText, refImages } = this.data
+    const size = RATIOS[sizeIndex]
+    const image_size = RESOLUTIONS[resIndex]
+    const model = MODELS[modelIndex]
+
+    this.setData({ generating: true })
+
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
     const card = {
       id, url: null, progress: 0, statusText: '准备中...',
-      finished: false, model: this.model, date: new Date().toLocaleDateString('zh-CN'),
-      prompt: this.data.promptText,
+      finished: false, model, date: new Date().toLocaleDateString('zh-CN'),
+      prompt: promptText,
     }
-    this.setData({ cards: [...this.data.cards, card] }, () => this.updateDerived())
+    this.setData({ cards: [card, ...this.data.cards] }, () => this.updateDerived())
 
     try {
       const res = await generate(
-        { size: this.size, model: this.model, image_size: this.image_size, prompt: this.data.promptText },
+        { size, model, image_size, prompt: promptText },
         null,
-        this.data.refImages.length ? this.data.refImages : undefined,
+        refImages.length ? refImages : undefined,
       )
       this.updateCard(id, { statusText: '任务已提交' })
       this.startPolling(id, res.taskId)
     } catch (e: any) {
-      this.updateCard(id, { error: e.message })
+      this.updateCard(id, { error: e.message, statusText: '生成失败' })
       this.setData({ generating: false })
     }
   },
@@ -145,7 +135,6 @@ Page({
         if (res.taskStatus === 'SUCCEEDED') {
           this.updateCard(id, { progress: 100, statusText: '生成完成', url: res.imageUrl, finished: true })
           this.setData({ generating: false })
-          this.loadAlbums()
           return
         }
         if (res.taskStatus === 'FAILED') {
@@ -164,23 +153,6 @@ Page({
     setTimeout(poll, 2000)
   },
 
-  async loadAlbums() {
-    try {
-      const res = await getAlbums()
-      if (res.albums) {
-        this.setData({
-          albums: res.albums.map((a: any) => ({
-            ...a,
-            url: a.imageUrl,
-            model: a.config?.model || '',
-            date: new Date(a.createdAt).toLocaleDateString('zh-CN'),
-            prompt: a.prompt || '',
-          })),
-        }, () => this.updateDerived())
-      }
-    } catch {}
-  },
-
   openImage(e: any) {
     const url = e.currentTarget.dataset.url
     if (url) wx.previewImage({ urls: [url] })
@@ -195,16 +167,5 @@ Page({
         wx.showToast({ title: '已复制', icon: 'none', duration: 1500 })
       },
     })
-  },
-
-  prevPage() {
-    if (this.data.page > 0) {
-      this.setData({ page: this.data.page - 1 }, () => this.updateDerived())
-    }
-  },
-  nextPage() {
-    if ((this.data.page + 1) * PAGE_SIZE < this.data.albums.length) {
-      this.setData({ page: this.data.page + 1 }, () => this.updateDerived())
-    }
   },
 })

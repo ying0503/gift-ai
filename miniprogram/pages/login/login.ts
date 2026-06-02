@@ -27,7 +27,7 @@ Page({
       const res = isRegister ? await register(email, password) : await login(email, password)
       wx.setStorageSync('token', res.token)
       wx.setStorageSync('user', res.user)
-      wx.redirectTo({ url: '/pages/index/index' })
+      wx.switchTab({ url: '/pages/index/index' })
     } catch (e: any) {
       this.setData({ error: e.message })
     } finally {

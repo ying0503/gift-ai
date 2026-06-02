@@ -1,4 +1,3 @@
-<navigation-bar title="礼品画册" back="{{false}}" color="black" background="#FFF"></navigation-bar>
 <scroll-view class="scrollarea" scroll-y type="list">
   <view class="page">
 
@@ -52,15 +51,17 @@
     <!-- 生成按钮 -->
     <button class="generate-btn" disabled="{{!canGenerate || generating}}" bindtap="handleGenerate" loading="{{generating}}">生成画册</button>
 
-    <!-- 我的画册 -->
-    <view class="section-title">我的画册</view>
-    <view wx:if="{{allCards.length === 0}}" class="empty">暂无画册</view>
-    <view wx:else class="card-grid">
-      <view wx:for="{{allCards}}" wx:key="id" class="card album-card" data-url="{{item.url}}" bindtap="openImage">
+    <!-- 生成中的卡片 -->
+    <view wx:if="{{cards.length > 0}}" class="section-title">生成进度</view>
+    <view class="card-grid">
+      <view wx:for="{{cards}}" wx:key="id" class="card album-card" data-url="{{item.url}}" bindtap="openImage">
         <image wx:if="{{item.url}}" src="{{item.url}}" mode="aspectFill" class="album-img" />
+        <view wx:elif="{{item.error}}" class="error-wrap">
+          <text class="error-text">{{item.error}}</text>
+        </view>
         <view wx:else class="loading-wrap">
-          <view class="spinner"></view>
           <text class="percent">{{item.progress}}%</text>
+          <text class="status-text">{{item.statusText}}</text>
         </view>
         <view class="album-info">
           <text class="album-model">{{item.model}}</text>
@@ -71,13 +72,6 @@
           <text class="copy-icon" data-prompt="{{item.prompt}}" bindtap="copyPrompt">复制</text>
         </view>
       </view>
-    </view>
-
-    <!-- 分页 -->
-    <view wx:if="{{totalPages > 1}}" class="pagination">
-      <button class="page-btn" disabled="{{page === 0}}" bindtap="prevPage">上一页</button>
-      <text class="page-info">{{page + 1}} / {{totalPages}}</text>
-      <button class="page-btn" disabled="{{page >= totalPages - 1}}" bindtap="nextPage">下一页</button>
     </view>
 
   </view>

@@ -1,11 +1,33 @@
 {
   "pages": [
-    "pages/login/login",
-    "pages/index/index"
+    "pages/index/index",
+    "pages/albums/albums",
+    "pages/profile/profile",
+    "pages/login/login"
   ],
   "window": {
     "navigationBarTextStyle": "black",
     "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#1a1a2e",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/albums/albums",
+        "text": "画册"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
   },
   "style": "v2",
   "renderer": "skyline",
