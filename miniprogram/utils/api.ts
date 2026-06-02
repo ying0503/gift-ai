@@ -3,7 +3,7 @@ let initialized = false
 export function initCloud() {
   if (initialized) return
   wx.cloud.init({
-    env: 'd257fd3c-f6a2-44c7-b96e-42102d6f2acO', // 替换为你的云开发环境ID
+    env: 'cloud1-d7g4ft8xne45d109e',
     traceUser: true,
   })
   initialized = true
@@ -15,15 +15,16 @@ export function callFunction(name: string, data: any): Promise<any> {
       name,
       data,
       success(res) {
-        const result = res.result as any
+        const result = (res.result || {}) as any
         if (result.code && result.code >= 400) {
           reject(new Error(result.error || '请求失败'))
         } else {
           resolve(result.data !== undefined ? result.data : result)
         }
       },
-      fail(err) {
-        reject(new Error(err.errMsg || '网络错误'))
+      fail(err: any) {
+        const msg = (err.errMsg || '').replace(/^cloud\.callFunction:fail\s*/i, '')
+        reject(new Error(msg || '网络错误'))
       },
     })
   })

@@ -18,8 +18,9 @@ Page({
     this.setData({ isRegister: !this.data.isRegister, error: '' })
   },
   async submit() {
-    const { email, password, isRegister, loading } = this.data
+    const { email: rawEmail, password, isRegister, loading } = this.data
     if (loading) return
+    const email = rawEmail.trim().toLowerCase()
     if (!email || !password) { this.setData({ error: '请填写邮箱和密码' }); return }
     this.setData({ loading: true, error: '' })
     try {

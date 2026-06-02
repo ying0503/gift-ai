@@ -46,16 +46,22 @@ exports.main = async (event) => {
 const maiziaiKey = process.env.MAIZIAI_API_KEY
   if (isMaiziai && !maiziaiKey) return { code: 500, error: 'MAIZIAI_API_KEY not configured' }
 
+const supportsImages = config.model === 'gpt-image-2-official'
+    if (hasImages && !supportsImages) return { code: 400, error: '该模型不支持参考图片，请使用 gpt-image-2-official' }
+
     if (isMaiziai) {
       const apiModel = config.model === 'maiziai-chatgpt-image-2' ? 'gpt-image-2' : config.model
-      const body = JSON.stringify({
+      const bodyData = {
         model: apiModel,
         prompt,
         size: config.size === 'auto' ? undefined : config.size,
         image_size: config.image_size || '1K',
-        images: hasImages ? images : undefined,
         n: 1,
-      })
+      }
+      if (hasImages && supportsImages) {
+        bodyData.images = images
+      }
+      const body = JSON.stringify(bodyData)
 
       const res = await axios.post('https://www.maizitech.cn/v1/images/generations', body, {
         headers: {

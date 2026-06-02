@@ -32,7 +32,8 @@ function generateToken() {
 }
 
 exports.main = async (event) => {
-  const { action, email, password, token } = event
+  const { action, email: rawEmail, password, token } = event
+  const email = rawEmail ? rawEmail.toLowerCase().trim() : rawEmail
 
   try {
     // --- Register ---
@@ -49,12 +50,12 @@ exports.main = async (event) => {
         data: { email, passwordHash, createdAt: Date.now() },
       })
 
-      const token = generateToken()
+      const newToken = generateToken()
       await tokens.add({
-        data: { token, userId: userResult._id, email, createdAt: Date.now() },
+        data: { token: newToken, userId: userResult._id, email, createdAt: Date.now() },
       })
 
-      return { code: 200, data: { success: true, token, user: { id: userResult._id, email } } }
+      return { code: 200, data: { success: true, token: newToken, user: { id: userResult._id, email } } }
     }
 
     // --- Login ---
@@ -68,12 +69,12 @@ exports.main = async (event) => {
       const valid = await verifyPassword(password, user.passwordHash)
       if (!valid) return { code: 401, error: 'Invalid email or password' }
 
-      const token = generateToken()
+      const newToken = generateToken()
       await tokens.add({
-        data: { token, userId: user._id, email, createdAt: Date.now() },
+        data: { token: newToken, userId: user._id, email, createdAt: Date.now() },
       })
 
-      return { code: 200, data: { success: true, token, user: { id: user._id, email: user.email } } }
+      return { code: 200, data: { success: true, token: newToken, user: { id: user._id, email: user.email } } }
     }
 
     // --- Verify Token ---
