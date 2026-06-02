@@ -1,23 +1,25 @@
-const API_BASE = 'https://gift-album-backend.yingganfei.workers.dev'
+let initialized = false
 
-function getToken(): string {
-  return wx.getStorageSync('token') || ''
+export function initCloud() {
+  if (initialized) return
+  wx.cloud.init({
+    env: 'gift-ai', // 替换为你的云开发环境ID
+    traceUser: true,
+  })
+  initialized = true
 }
 
-function request<T>(url: string, options: Omit<WechatMiniprogram.RequestOption, 'url'> = {}): Promise<T> {
+export function callFunction(name: string, data: any): Promise<any> {
   return new Promise((resolve, reject) => {
-    const token = getToken()
-    const header: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (token) header['Authorization'] = `Bearer ${token}`
-    wx.request({
-      ...options,
-      url: `${API_BASE}${url}`,
-      header: { ...header, ...options.header },
+    wx.cloud.callFunction({
+      name,
+      data,
       success(res) {
-        if (res.statusCode >= 400) {
-          reject(new Error((res.data as any)?.error || '请求失败'))
+        const result = res.result as any
+        if (result.code && result.code >= 400) {
+          reject(new Error(result.error || '请求失败'))
         } else {
-          resolve(res.data as T)
+          resolve(result.data !== undefined ? result.data : result)
         }
       },
       fail(err) {
@@ -27,41 +29,34 @@ function request<T>(url: string, options: Omit<WechatMiniprogram.RequestOption, 
   })
 }
 
-export function login(email: string, password: string) {
-  return request<{ success: boolean; token: string; user: { id: string; email: string } }>('/api/login', {
-    method: 'POST',
-    data: { email, password },
-  })
+export async function login(email: string, password: string) {
+  return callFunction('auth', { action: 'login', email, password })
 }
 
-export function register(email: string, password: string) {
-  return request<{ success: boolean; token: string; user: { id: string; email: string } }>('/api/register', {
-    method: 'POST',
-    data: { email, password },
-  })
+export async function register(email: string, password: string) {
+  return callFunction('auth', { action: 'register', email, password })
 }
 
-export function getMe() {
-  return request<{ user: { id: string; email: string } }>('/api/me')
+export async function getMe() {
+  const token = wx.getStorageSync('token')
+  return callFunction('auth', { action: 'verifyToken', token })
 }
 
-export function logout() {
-  return request<{ success: boolean }>('/api/logout', { method: 'POST' })
+export async function logout() {
+  const token = wx.getStorageSync('token')
+  return callFunction('auth', { action: 'logout', token })
 }
 
-export function generate(config: any, excel: any, images?: string[]) {
-  return request<{ taskId: string }>('/api/generate', {
-    method: 'POST',
-    data: { config, excel, images },
-  })
+export async function generate(config: any, excel: any, images?: string[]) {
+  const token = wx.getStorageSync('token')
+  return callFunction('generate', { token, config, excel, images })
 }
 
-export function getStatus(taskId: string) {
-  return request<{ taskStatus: string; progress: number; statusText: string; imageUrl: string | null }>(
-    `/api/generate/status?taskId=${taskId}`
-  )
+export async function getStatus(taskId: string) {
+  return callFunction('getStatus', { taskId })
 }
 
-export function getAlbums() {
-  return request<{ albums: any[] }>('/api/albums')
+export async function getAlbums() {
+  const token = wx.getStorageSync('token')
+  return callFunction('getAlbums', { token })
 }
