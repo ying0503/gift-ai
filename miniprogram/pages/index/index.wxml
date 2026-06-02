@@ -1,0 +1,84 @@
+<navigation-bar title="礼品画册" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y type="list">
+  <view class="page">
+
+    <!-- 提示词 -->
+    <view class="card">
+      <view class="card-header">
+        <text class="card-title">提示词</text>
+        <text class="import-btn" bindtap="importExcel">导入 Excel</text>
+      </view>
+      <textarea class="textarea" value="{{promptText}}" bindinput="onPromptInput" placeholder="请输入提示词" maxlength="-1" />
+    </view>
+
+    <!-- 配置 -->
+    <view class="card">
+      <view class="config-row">
+        <view class="config-item">
+          <text class="label">比例</text>
+          <picker mode="selector" range="{{ratios}}" value="{{sizeIndex}}" bindchange="onSizeChange">
+            <view class="picker">{{ratios[sizeIndex]}}</view>
+          </picker>
+        </view>
+        <view class="config-item">
+          <text class="label">分辨率</text>
+          <picker mode="selector" range="{{resolutions}}" value="{{resIndex}}" bindchange="onResChange">
+            <view class="picker">{{resolutions[resIndex]}}</view>
+          </picker>
+        </view>
+        <view class="config-item">
+          <text class="label">模型</text>
+          <picker mode="selector" range="{{models}}" value="{{modelIndex}}" bindchange="onModelChange">
+            <view class="picker">{{models[modelIndex]}}</view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <!-- 参考图片 -->
+    <view class="card">
+      <view class="card-header">
+        <text class="card-title">参考图片</text>
+        <text class="import-btn" bindtap="uploadRef">+ 上传</text>
+      </view>
+      <view class="ref-list">
+        <view wx:for="{{refImages}}" wx:key="index" class="ref-item">
+          <image src="{{item}}" mode="aspectFill" class="ref-img" />
+          <text class="ref-del" data-url="{{item}}" bindtap="removeRef">×</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 生成按钮 -->
+    <button class="generate-btn" disabled="{{!canGenerate || generating}}" bindtap="handleGenerate" loading="{{generating}}">生成画册</button>
+
+    <!-- 我的画册 -->
+    <view class="section-title">我的画册</view>
+    <view wx:if="{{allCards.length === 0}}" class="empty">暂无画册</view>
+    <view wx:else class="card-grid">
+      <view wx:for="{{allCards}}" wx:key="id" class="card album-card" data-url="{{item.url}}" bindtap="openImage">
+        <image wx:if="{{item.url}}" src="{{item.url}}" mode="aspectFill" class="album-img" />
+        <view wx:else class="loading-wrap">
+          <view class="spinner"></view>
+          <text class="percent">{{item.progress}}%</text>
+        </view>
+        <view class="album-info">
+          <text class="album-model">{{item.model}}</text>
+          <text class="album-date">{{item.date}}</text>
+        </view>
+        <view wx:if="{{item.prompt}}" class="prompt-row">
+          <text class="prompt-text">{{item.prompt}}</text>
+          <image class="copy-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='13' height='13' rx='2' ry='2'/%3E%3Cpath d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/%3E%3C/svg%3E" data-prompt="{{item.prompt}}" bindtap="copyPrompt" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 分页 -->
+    <view wx:if="{{totalPages > 1}}" class="pagination">
+      <button class="page-btn" disabled="{{page === 0}}" bindtap="prevPage">上一页</button>
+      <text class="page-info">{{page + 1}} / {{totalPages}}</text>
+      <button class="page-btn" disabled="{{page >= totalPages - 1}}" bindtap="nextPage">下一页</button>
+    </view>
+
+  </view>
+</scroll-view>
