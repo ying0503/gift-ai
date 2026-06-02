@@ -3,7 +3,7 @@ let initialized = false
 export function initCloud() {
   if (initialized) return
   wx.cloud.init({
-    env: 'gift-ai', // 替换为你的云开发环境ID
+    env: 'd257fd3c-f6a2-44c7-b96e-42102d6f2acO', // 替换为你的云开发环境ID
     traceUser: true,
   })
   initialized = true
